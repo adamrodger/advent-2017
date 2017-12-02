@@ -27,23 +27,10 @@ namespace AdventOfCode
         /// </summary>
         /// <param name="input">Input</param>
         /// <returns>Solution</returns>
-        public string Part1(string input)
+        public int Part1(string input)
         {
-            var numbers = input.Select(c => c - AsciiIndex).ToArray();
-            var total = 0;
-
-            for (int i = 0; i < numbers.Length; i++)
-            {
-                int n = numbers[i];
-                int m = numbers[(i + 1) % numbers.Length];
-
-                if (n == m)
-                {
-                    total += n;
-                }
-            }
-
-            return total.ToString();
+            // always check the next number
+            return this.CheckInput(input, _ => 1);
         }
 
         /// <summary>
@@ -61,16 +48,27 @@ namespace AdventOfCode
         /// </summary>
         /// <param name="input">Input</param>
         /// <returns>Solution</returns>
-        public string Part2(string input)
+        public int Part2(string input)
+        {
+            return this.CheckInput(input, numbers => numbers.Length / 2);
+        }
+
+        /// <summary>
+        /// Checks the input by comparing each one to a given offset
+        /// </summary>
+        /// <param name="input">Input string</param>
+        /// <param name="offsetFunc">Function to generate the offset from the number list</param>
+        /// <returns>Solution total</returns>
+        private int CheckInput(string input, Func<int[], int> offsetFunc)
         {
             var numbers = input.Select(c => c - AsciiIndex).ToArray();
-            var radix = numbers.Length / 2;
+            var offset = offsetFunc(numbers);
             var total = 0;
 
             for (int i = 0; i < numbers.Length; i++)
             {
                 int n = numbers[i];
-                int m = numbers[(i + radix) % numbers.Length];
+                int m = numbers[(i + offset) % numbers.Length];
 
                 if (n == m)
                 {
@@ -78,7 +76,7 @@ namespace AdventOfCode
                 }
             }
 
-            return total.ToString();
+            return total;
         }
     }
 }
