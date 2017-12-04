@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Xunit;
 
 namespace AdventOfCode.Tests
@@ -24,6 +23,27 @@ namespace AdventOfCode.Tests
             var solve = new Day03();
 
             int actual = solve.Part1(input);
+
+            Assert.Equal(expected, actual);
+        }
+
+        [Theory]
+        [InlineData(1, 2)]
+        [InlineData(2, 4)]
+        [InlineData(4, 5)]
+        [InlineData(5, 10)]
+        [InlineData(10, 11)]
+        [InlineData(11, 23)]
+        [InlineData(23, 25)]
+        [InlineData(25, 26)]
+        [InlineData(26, 54)]
+        [InlineData(747, 806)]
+        [InlineData(361527, 363010)]
+        public void Part2_WhenCalled_ProducesCorrectSolution(int input, int expected)
+        {
+            var solve = new Day03();
+
+            int actual = solve.Part2(input);
 
             Assert.Equal(expected, actual);
         }
