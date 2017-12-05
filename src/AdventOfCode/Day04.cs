@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace AdventOfCode
@@ -55,10 +56,27 @@ namespace AdventOfCode
 
             var valid = lines.Select(line => line.Split(' '))
                              // sort each word alphabetically to check for anagrams
-                             .Select(words => words.Select(w => string.Concat(w.OrderBy(c => c))).ToArray())
+                             .Select(words => words.Select(w => Sorted(w)).ToArray())
                              .Where(words => words.Length == words.Distinct().Count());
 
             return valid.Count();
+        }
+
+        /// <summary>
+        /// Sort the characters in a string
+        /// </summary>
+        /// <param name="input">String to sort</param>
+        /// <returns>Sorted string</returns>
+        /// <example>
+        /// string foo = "abfedc";
+        /// string sorted = Sorted(foo);
+        /// Console.WriteLine(sorted); /// abcdef
+        /// </example>
+        private static string Sorted(string input)
+        {
+            char[] c = input.ToArray();
+            Array.Sort(c);
+            return new string(c);
         }
     }
 }
