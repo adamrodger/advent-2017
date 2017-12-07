@@ -4,10 +4,7 @@ namespace AdventOfCode.Tests
 {
     public class Day07Tests
     {
-        [Fact]
-        public void Part1_KnownInput_ReturnsRootNode()
-        {
-            string[] input =
+            private static readonly string[] SimpleInput =
             {
                 "pbga (66)",
                 "xhth (57)",
@@ -24,7 +21,10 @@ namespace AdventOfCode.Tests
                 "cntj (57)"
             };
 
-            string actual = new Day07().Part1(input);
+        [Fact]
+        public void Part1_KnownInput_ReturnsRootNode()
+        {
+            string actual = new Day07().Part1(SimpleInput);
 
             Assert.Equal("tknk", actual);
         }
@@ -35,6 +35,22 @@ namespace AdventOfCode.Tests
             string actual = new Day07().Part1();
 
             Assert.Equal("aapssr", actual);
+        }
+
+        [Fact]
+        public void Part2_KnownInput_ReturnsCorrectionFactor()
+        {
+            int actual = new Day07().Part2(SimpleInput);
+
+            Assert.Equal(60, actual);
+        }
+
+        [Fact]
+        public void Part2_InputFile_ReturnsCorrectionFactor()
+        {
+            int actual = new Day07().Part2();
+
+            Assert.Equal(1458, actual);
         }
     }
 }
