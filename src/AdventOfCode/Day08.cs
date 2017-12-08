@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace AdventOfCode
 {
@@ -21,111 +20,43 @@ namespace AdventOfCode
             return this.Solve(lines);
         }
 
-        /// <summary>
-        /// Solve for the given input
-        /// </summary>
-        /// <returns>Highest at the end, highest ever</returns>
         public (int, int) Solve(ICollection<string> input)
         {
+            var conditions = new Dictionary<string, Func<int, int, bool>>
+            {
+                [">"] = (reg, x) => reg > x,
+                ["<"] = (reg, x) => reg <= x && reg != x, // Visual Studio thinks this is a syntax error if you use '<' but it compiles and works fine!
+                [">="] = (reg, x) => reg >= x,
+                ["<="] = (reg, x) => reg <= x,
+                ["=="] = (reg, x) => reg == x,
+                ["!="] = (reg, x) => reg != x
+            };
+
+            var operations = new Dictionary<string, Func<int, int, int>>
+            {
+                ["inc"] = (reg, val) => reg + val,
+                ["dec"] = (reg, val) => reg - val
+            };
+
             var registers = new Dictionary<string, int>();
             int max = 0;
 
             foreach (string line in input)
             {
-                var instruction = Instruction.Parse(line);
-                if (instruction.Condition(registers))
+                string[] parts = line.Split(' ');
+                (string reg, string op, int step, string condReg, string con, int conVal) = (parts[0], parts[1], int.Parse(parts[2]), parts[4], parts[5], int.Parse(parts[6]));
+
+                registers.TryGetValue(condReg, out int checkVal);
+
+                if (conditions[con](checkVal, conVal))
                 {
-                    instruction.Action(registers);
-                    max = Math.Max(max, registers.Values.Max());
+                    registers.TryGetValue(reg, out int regVal);
+                    registers[reg] = operations[op](regVal, step);
+                    max = Math.Max(max, registers[reg]);
                 }
             }
 
             return (registers.Values.Max(), max);
-        }
-    }
-
-    /// <summary>
-    /// Instruction
-    /// </summary>
-    public class Instruction
-    {
-        private static readonly Regex ParseRegex = new Regex(@"(\w+) (inc|dec) (-?\d+) if (\w+) ([!<>!=]+) (-?\d+)", RegexOptions.Compiled);
-
-        /// <summary>
-        /// Action to perform if the condition is met
-        /// </summary>
-        public Action<IDictionary<string, int>> Action { get; private set; }
-
-        /// <summary>
-        /// Condition of the action
-        /// </summary>
-        public Predicate<IDictionary<string, int>> Condition { get; private set; }
-
-        /// <summary>
-        /// Parse an instruction from the input string
-        /// </summary>
-        /// <param name="input">Input string</param>
-        /// <returns>Parsed instruction</returns>
-        public static Instruction Parse(string input)
-        {
-            Match match = ParseRegex.Match(input);
-
-            string target = match.Groups[1].Value;
-            bool increment = match.Groups[2].Value.Equals("inc");
-            int step = int.Parse(match.Groups[3].Value);
-
-            if (!increment)
-            {
-                step *= -1;
-            }
-
-            Action<IDictionary<string, int>> action = registers =>
-            {
-                registers.TryGetValue(target, out int value);
-                registers[target] = value + step;
-            };
-
-            string conditionRegister = match.Groups[4].Value;
-            string conditionOperation = match.Groups[5].Value;
-            int conditionValue = int.Parse(match.Groups[6].Value);
-
-            Predicate<int> condition;
-
-            switch (conditionOperation)
-            {
-                case "<":
-                    condition = x => x < conditionValue;
-                    break;
-                case ">":
-                    condition = x => x > conditionValue;
-                    break;
-                case "<=":
-                    condition = x => x <= conditionValue;
-                    break;
-                case ">=":
-                    condition = x => x >= conditionValue;
-                    break;
-                case "==":
-                    condition = x => x == conditionValue;
-                    break;
-                case "!=":
-                    condition = x => x != conditionValue;
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unknown condition: {conditionOperation}");
-            }
-
-            Predicate<IDictionary<string, int>> predicate = registers =>
-            {
-                registers.TryGetValue(conditionRegister, out int value);
-                return condition(value);
-            };
-
-            return new Instruction
-            {
-                Action = action,
-                Condition = predicate
-            };
         }
     }
 }
