@@ -15,32 +15,87 @@ namespace AdventOfCode
         /// </summary>
         /// <param name="lengths">Lengths to use when hashing</param>
         /// <returns>First two numbers multiplied after hashing</returns>
-        public int Solve(int size, int[] lengths)
+        public int Part1(int size, int[] lengths)
         {
             int[] buffer = Enumerable.Range(0, size).ToArray();
-
-            int skip = 0;
+            
             int position = 0;
+            int skip = 0;
 
+            this.Swap(buffer, lengths, ref position, ref skip);
+
+            return buffer[0] * buffer[1];
+        }
+
+        public string Part2(string input)
+        {
+            int[] buffer = Enumerable.Range(0, 256).ToArray();
+            int[] lengths = input.Select(c => (int)c).ToArray();
+            lengths = lengths.Concat(new[] { 17, 31, 73, 47, 23 }).ToArray();
+
+            int position = 0;
+            int skip = 0;
+
+            // 64 rounds of swapping
+            for (int i = 0; i < 64; i++)
+            {
+                this.Swap(buffer, lengths, ref position, ref skip);
+            }
+
+            // to base64
+            int[] dense = this.Reduce(buffer);
+            string hash = string.Join(string.Empty, dense.Select(d => d.ToString("x2")));
+
+            return hash;
+        }
+
+        public void Swap(int[] buffer, int[] lengths, ref int position, ref int skip)
+        {
             foreach (int length in lengths)
             {
-                var end = (position + length - 1) % size;
+                var end = (position + length - 1) % buffer.Length;
 
                 // reverse the slice, wrapping around the end
                 for (int i = 0; i < length / 2; i++)
                 {
-                    int swapStart = (position + i) % size;
-                    int swapEnd = (end + size - i) % size;
+                    int swapStart = (position + i) % buffer.Length;
+                    int swapEnd = (end + buffer.Length - i) % buffer.Length;
                     int temp = buffer[swapStart];
                     buffer[swapStart] = buffer[swapEnd];
                     buffer[swapEnd] = temp;
                 }
 
-                position = (position + length + skip) % size;
+                position = (position + length + skip) % buffer.Length;
                 skip++;
             }
+        }
 
-            return buffer[0] * buffer[1];
+        private int[] Reduce(int[] input)
+        {
+            int[] output = new int[16];
+
+            for (int i = 0; i < 16; i++)
+            {
+                output[i] = 
+                    input[i * 16 + 0] ^
+                    input[i * 16 + 1] ^
+                    input[i * 16 + 2] ^
+                    input[i * 16 + 3] ^
+                    input[i * 16 + 4] ^
+                    input[i * 16 + 5] ^
+                    input[i * 16 + 6] ^
+                    input[i * 16 + 7] ^
+                    input[i * 16 + 8] ^
+                    input[i * 16 + 9] ^
+                    input[i * 16 + 10] ^
+                    input[i * 16 + 11] ^
+                    input[i * 16 + 12] ^
+                    input[i * 16 + 13] ^
+                    input[i * 16 + 14] ^
+                    input[i * 16 + 15];
+            }
+
+            return output;
         }
     }
 }
