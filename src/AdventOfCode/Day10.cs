@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 
 namespace AdventOfCode
@@ -11,8 +8,9 @@ namespace AdventOfCode
     public class Day10
     {
         /// <summary>
-        /// Perform the hash function and return the first 2 numbers multiplied
+        /// Perform the swap function and return the first 2 numbers multiplied
         /// </summary>
+        /// <param name="size">Size of the input buffer</param>
         /// <param name="lengths">Lengths to use when hashing</param>
         /// <returns>First two numbers multiplied after hashing</returns>
         public int Part1(int size, int[] lengths)
@@ -27,6 +25,11 @@ namespace AdventOfCode
             return buffer[0] * buffer[1];
         }
 
+        /// <summary>
+        /// Hash the given input
+        /// </summary>
+        /// <param name="input">Input string</param>
+        /// <returns>Hex-encoded hash</returns>
         public string Part2(string input)
         {
             int[] buffer = Enumerable.Range(0, 256).ToArray();
@@ -42,13 +45,20 @@ namespace AdventOfCode
                 this.Swap(buffer, lengths, ref position, ref skip);
             }
 
-            // to base64
+            // to hex
             int[] dense = this.Reduce(buffer);
             string hash = string.Join(string.Empty, dense.Select(d => d.ToString("x2")));
 
             return hash;
         }
 
+        /// <summary>
+        /// Swap segments of the buffer according to the supplied lengths, position and skip count
+        /// </summary>
+        /// <param name="buffer">Input buffer</param>
+        /// <param name="lengths">Lengths to swap within the circular buffer</param>
+        /// <param name="position">Start position (will be set to end position afterwards)</param>
+        /// <param name="skip">Constantly incrementing skip count</param>
         public void Swap(int[] buffer, int[] lengths, ref int position, ref int skip)
         {
             foreach (int length in lengths)
@@ -70,6 +80,11 @@ namespace AdventOfCode
             }
         }
 
+        /// <summary>
+        /// Reduce a 256-element input array to a 16-element output array by XOR'ing groups of 16 elements
+        /// </summary>
+        /// <param name="input">Input array</param>
+        /// <returns>Output array</returns>
         private int[] Reduce(int[] input)
         {
             int[] output = new int[16];
