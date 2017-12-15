@@ -37,17 +37,14 @@ namespace AdventOfCode
             {
                 for (int x = 0; x < visited.GetLength(0); x++) // columns
                 {
-                    if (visited[x, y])
+                    if (visited[x, y] || hashes[x][y] == '0')
                     {
                         continue;
                     }
 
-                    if (hashes[x][y] == '1')
-                    {
-                        // found an unvisited 1, mark new region
-                        this.Visit(x, y, hashes, visited);
-                        regions++;
-                    }
+                    // found an unvisited 1, mark new region
+                    this.Visit(x, y, hashes, visited);
+                    regions++;
                 }
             }
 
