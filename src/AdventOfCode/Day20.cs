@@ -5,21 +5,120 @@ using System.Linq;
 
 namespace AdventOfCode
 {
+    /// <summary>
+    /// Solver for Day 20
+    /// </summary>
     public class Day20
     {
-        public int Solve()
+        /// <summary>
+        /// Get the ID of the pixel that will remain closest to (0,0,0) over time from the real input file
+        /// </summary>
+        /// <returns>Closest pixel ID</returns>
+        public int Part1()
         {
             string[] lines = File.ReadAllLines("inputs/day20.txt");
-            return this.Solve(lines);
+            return this.Part1(lines);
         }
 
-        public int Solve(string[] lines)
+        /// <summary>
+        /// Get the ID of the pixel that will remain closest to (0,0,0) over time from the given input
+        /// </summary>
+        /// <param name="lines">Input lines</param>
+        /// <returns>Closest pixel ID</returns>
+        public int Part1(string[] lines)
         {
-            List<Pixel> pixels = new List<Pixel>();
+            List<Pixel> pixels = lines.Select(Pixel.Parse).ToList();
 
-            for (var i = 0; i < lines.Length; i++)
+            // hack: perform enough simulations that everything is now probably travelling away from 0 then pick closest
+            for (int i = 0; i < 1000; i++)
             {
-                string line = lines[i];
+                pixels.ForEach(p => p.Tick());
+            }
+
+            var closest = pixels.Min(p => p.TotalDistance);
+            return pixels.First(p => p.TotalDistance == closest).Id;
+        }
+
+        /// <summary>
+        /// Get the total number of pixels remaining after all collisions have been performed
+        /// </summary>
+        /// <returns>Number of pixels after collisions are removed</returns>
+        public int Part2()
+        {
+            string[] lines = File.ReadAllLines("inputs/day20.txt");
+            return this.Part2(lines);
+        }
+
+        /// <summary>
+        /// Get the total number of pixels remaining after all collisions have been performed
+        /// </summary>
+        /// <param name="lines">Input lines</param>
+        /// <returns>Number of pixels after collisions are removed</returns>
+        public int Part2(string[] lines)
+        {
+            List<Pixel> pixels = lines.Select(Pixel.Parse).ToList();
+
+            // hack: perform enough simulations that all collisions have probably happened
+            for (int i = 0; i < 1000; i++)
+            {
+                pixels.ForEach(p => p.Tick());
+
+                // remove collisions
+                List<Pixel> collisions = pixels.GroupBy(p => p.Position)
+                                               .Where(g => g.Count() > 1)
+                                               .SelectMany(g => g).ToList();
+                collisions.ForEach(c => pixels.Remove(c));
+            }
+
+            return pixels.Count;
+        }
+
+        /// <summary>
+        /// Pixel
+        /// </summary>
+        private class Pixel
+        {
+            private int x, y, z;
+            private int vx, vy, vz;
+            private int ax, ay, az;
+
+            /// <summary>
+            /// Pixel ID
+            /// </summary>
+            public int Id { get; private set; }
+            
+            /// <summary>
+            /// Current position (x,y,z)
+            /// </summary>
+            public (int x, int y, int z) Position => (this.x, this.y, this.z);
+
+            /// <summary>
+            /// Total distance from (0,0,0)
+            /// </summary>
+            public int TotalDistance => Math.Abs(this.x) + Math.Abs(this.y) + Math.Abs(this.z);
+
+            /// <summary>
+            /// Accelerate and then move the pixel
+            /// </summary>
+            public void Tick()
+            {
+                this.vx += this.ax;
+                this.vy += this.ay;
+                this.vz += this.az;
+
+                this.x += this.vx;
+                this.y += this.vy;
+                this.z += this.vz;
+            }
+
+            /// <summary>
+            /// Parse a pixel from the given line with the given ID
+            /// </summary>
+            /// <param name="line">Line to parse</param>
+            /// <param name="id">Pixel ID</param>
+            /// <returns>Parsed pixel</returns>
+            public static Pixel Parse(string line, int id)
+            {
                 var parts = line.Split(new[] { ", " }, StringSplitOptions.None);
                 var position = parts[0].Substring(0, parts[0].Length - 1)
                                        .Substring(3)
@@ -37,95 +136,19 @@ namespace AdventOfCode
                                            .Select(int.Parse)
                                            .ToArray();
 
-                pixels.Add(new Pixel
+                return new Pixel
                 {
-                    Id = i,
-                    PositionX = position[0],
-                    PositionY = position[1],
-                    PositionZ = position[2],
-                    VelocityX = velocity[0],
-                    VelocityY = velocity[1],
-                    VelocityZ = velocity[2],
-                    AccelerationX = acceleration[0],
-                    AccelerationY = acceleration[1],
-                    AccelerationZ = acceleration[2]
-                });
-            }
-
-            var minSpeed = pixels.Min(p => p.TotalAcceleration);
-            var slowest = pixels.Where(p => p.TotalAcceleration == minSpeed).ToArray();
-
-            var closest = slowest.MinBy(p => p.TotalDistance);
-
-            string values = string.Join(Environment.NewLine, pixels.OrderBy(p => p.TotalAcceleration)
-                                                                   .Select(p => p.ToString()));
-
-            return closest.Id;
-        }
-
-        private struct Pixel
-        {
-            public int Id { get; set; }
-
-            public int PositionX { get; set; }
-            public int PositionY { get; set; }
-            public int PositionZ { get; set; }
-            public int TotalDistance => Math.Abs(this.PositionX) + Math.Abs(this.PositionY) + Math.Abs(this.PositionZ);
-
-            public int VelocityX { get; set; }
-            public int VelocityY { get; set; }
-            public int VelocityZ { get; set; }
-            public int TotalVelocity => Math.Abs(this.VelocityX) + Math.Abs(this.VelocityY) + Math.Abs(this.VelocityZ);
-
-            public int AccelerationX { get; set; }
-            public int AccelerationY { get; set; }
-            public int AccelerationZ { get; set; }
-            public int TotalAcceleration => Math.Abs(this.AccelerationX) + Math.Abs(this.AccelerationY) + Math.Abs(this.AccelerationZ);
-
-            /// <summary>Returns the fully qualified type name of this instance.</summary>
-            /// <returns>The fully qualified type name.</returns>
-            public override string ToString()
-            {
-                return $"{Id}, " +
-                       $"({PositionX}, {PositionY}, {PositionZ})={TotalDistance}, " +
-                       $"({VelocityX}, {VelocityY}, {VelocityZ})={TotalVelocity}, " + 
-                       $"({AccelerationX}, {AccelerationY}, {AccelerationZ})={TotalAcceleration}";
-            }
-        }
-    }
-
-    public static class Extensions
-    {
-        public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector)
-        {
-            return source.MinBy(selector, null);
-        }
-
-        public static TSource MinBy<TSource, TKey>(this IEnumerable<TSource> source, Func<TSource, TKey> selector, IComparer<TKey> comparer)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-            if (selector == null) throw new ArgumentNullException("selector");
-            comparer = comparer ?? Comparer<TKey>.Default;
-
-            using (var sourceIterator = source.GetEnumerator())
-            {
-                if (!sourceIterator.MoveNext())
-                {
-                    throw new InvalidOperationException("Sequence contains no elements");
-                }
-                var min = sourceIterator.Current;
-                var minKey = selector(min);
-                while (sourceIterator.MoveNext())
-                {
-                    var candidate = sourceIterator.Current;
-                    var candidateProjected = selector(candidate);
-                    if (comparer.Compare(candidateProjected, minKey) < 0)
-                    {
-                        min = candidate;
-                        minKey = candidateProjected;
-                    }
-                }
-                return min;
+                    Id = id,
+                    x = position[0],
+                    y = position[1],
+                    z = position[2],
+                    vx = velocity[0],
+                    vy = velocity[1],
+                    vz = velocity[2],
+                    ax = acceleration[0],
+                    ay = acceleration[1],
+                    az = acceleration[2]
+                };
             }
         }
     }
