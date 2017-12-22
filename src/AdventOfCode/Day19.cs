@@ -7,21 +7,13 @@ namespace AdventOfCode
     /// <summary>
     /// Solver for day 19
     /// </summary>
-    public class Day19
+    public partial class Day19
     {
         private const char Vertical = '|';
         private const char Horizontal = '-';
         private const char Corner = '+';
         private const char Empty = ' ';
         private static readonly char[] SpecialCharacters = { Vertical, Horizontal, Corner };
-
-        private enum Direction
-        {
-            Down,
-            Up,
-            Left,
-            Right
-        };
 
         /// <summary>
         /// Follow the path set out in the path from the input file and 'collect' letters
