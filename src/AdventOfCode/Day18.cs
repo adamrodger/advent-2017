@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace AdventOfCode
 {
@@ -31,7 +29,7 @@ namespace AdventOfCode
             var duet = new Duet(instructions, buffer, buffer, 0);
 
             // wait until the first message is successfully received
-            while (duet.ReceivedMessages == 0)
+            while (duet.CommandCount["rcv"] == 0)
             {
                 duet.Step();
             }
@@ -78,135 +76,7 @@ namespace AdventOfCode
                 }
             }
 
-            return b.SentMessages;
-        }
-    }
-
-    /// <summary>
-    /// Interpreter for the Duet instructions
-    /// </summary>
-    public class Duet
-    {
-        private readonly IList<string> instructions;
-        private readonly Queue<long> input;
-        private readonly Queue<long> output;
-        private readonly IDictionary<char, long> registers;
-
-        private long pointer;
-
-        /// <summary>
-        /// Value of the message that was last sent by this instance
-        /// </summary>
-        public long LastSent { get; private set; }
-
-        /// <summary>
-        /// Total number of sent message
-        /// </summary>
-        public int SentMessages { get; private set; }
-
-        /// <summary>
-        /// Total number of received messages
-        /// </summary>
-        public int ReceivedMessages { get; private set; }
-
-        /// <summary>
-        /// Is this instance finished executing?
-        /// </summary>
-        public bool Finished => this.pointer < 0 || this.pointer >= this.instructions.Count;
-
-        /// <summary>
-        /// Is this instance waiting for input from another instance?
-        /// </summary>
-        public bool Waiting => this.input.Count == 0 && this.instructions[(int)this.pointer].StartsWith("rcv");
-
-        /// <summary>
-        /// Initialises a new instance of the <see cref="Duet"/> class.
-        /// </summary>
-        /// <param name="instructions">Instructions to follow</param>
-        /// <param name="input">Input buffer</param>
-        /// <param name="output">Output buffer</param>
-        /// <param name="id">Instance ID</param>
-        public Duet(IList<string> instructions, Queue<long> input, Queue<long> output, int id)
-        {
-            this.instructions = instructions;
-            this.input = input;
-            this.output = output;
-
-            this.registers = Enumerable.Range('a', 'z' - 'a').ToDictionary(c => (char)c, c => 0L);
-            this.registers['p'] = id;
-        }
-
-        /// <summary>
-        /// Execute the current instruction and advance the pointer to the next instruction
-        /// </summary>
-        public void Step()
-        {
-            if (this.Finished)
-            {
-                return;
-            }
-
-            string instruction = this.instructions[(int)this.pointer];
-            string[] parts = instruction.Split(' ');
-
-            string command = parts[0];
-            char register = parts[1][0];
-            long value = parts.Length == 3 ? this.GetValue(parts[2]) : 0;
-
-            switch (command)
-            {
-                case "snd":
-                    value = this.GetValue(parts[1]);
-                    this.output.Enqueue(value);
-                    this.SentMessages++;
-                    this.LastSent = value;
-                    break;
-                case "rcv":
-                    this.registers[register] = this.input.Dequeue();
-                    this.ReceivedMessages++;
-
-                    break;
-                case "set":
-                    this.registers[register] = value;
-                    break;
-                case "add":
-                    this.registers[register] += value;
-                    break;
-                case "mul":
-                    this.registers[register] *= value;
-                    break;
-                case "mod":
-                    this.registers[register] %= value;
-                    break;
-                case "jgz":
-                    if (this.GetValue(parts[1]) > 0)
-                    {
-                        this.pointer += value;
-                        return;
-                    }
-
-                    break;
-                default:
-                    throw new FormatException();
-            }
-
-            this.pointer++;
-        }
-
-        /// <summary>
-        /// Get the label either as a literal value or the value of the labelled register
-        /// </summary>
-        /// <param name="label">Label to parse</param>
-        /// <returns>Either the literal value if a number or the register value if a character</returns>
-        private long GetValue(string label)
-        {
-            if (long.TryParse(label, out long value))
-            {
-                return value;
-            }
-
-            char register = label[0];
-            return this.registers[register];
+            return b.CommandCount["snd"];
         }
     }
 }
